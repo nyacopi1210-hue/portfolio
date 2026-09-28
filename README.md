@@ -1,6 +1,7 @@
 # AWS Webインフラストラクチャポートフォリオ
 
 ALB・EC2・RDSを使った3層Webアーキテクチャを構築した。
+初期構築ではHTTPで動作確認を行い、その後、独自ドメイン・Route 53・ACMを追加してHTTPS化した。
 
 ## 構成図
 
@@ -9,9 +10,11 @@ ALB・EC2・RDSを使った3層Webアーキテクチャを構築した。
 ## 30秒サマリ
 
 - AWS上で、セキュリティとコストを考慮したWebシステム構成を設計・構築することを課題とした。
-- ALB、EC2×2、RDS、NAT Gatewayを構築した。
+- ALB、EC2×2、RDS、NAT Gateway、Route 53、ACMを使用した。
 - 2AZ構成とし、ALBをPublic Subnet、EC2とRDSをPrivate Subnetに配置した。
 - ALB経由でのWeb表示、2台のEC2からRDSへの接続、Private Subnet内のEC2から外向き通信ができることを確認した。
+- 独自ドメインを取得し、Route 53でALBへの名前解決を設定した。
+- ACMでSSL/TLS証明書を発行し、ALBにHTTPSリスナーを設定した。
 
 ## 検証結果
 
@@ -43,6 +46,15 @@ EC2を1台停止し、停止側が `Unused`、稼働中のEC2が `Healthy` に�
 
 ALB経由で稼働中EC2のWebページが表示され、1台停止時でもサービスを継続できることを確認した。
 
+### HTTPS通信の確認
+
+独自ドメインへ https:// でアクセスし、Webページが正常に表示されることを確認した。
+
+Route 53で独自ドメインからALBへの名前解決を行い、ACMで発行したSSL/TLS証明書をALBのHTTPSリスナーに設定した。
+
+これにより、利用者からALBまでの通信をHTTPS化した。
+
+
 ## 判断の記録
 
 [Decision Logを見る](docs/design-log.md)
@@ -61,5 +73,6 @@ ALB経由で稼働中EC2のWebページが表示され、1台停止時でもサ�
 
 - RDS：Single-AZ → Multi-AZ化して可用性を高める。
 - NAT Gateway：1台 → 各AZに配置して単一障害点を減らす。
-- 通信：HTTP → ACMを利用してHTTPS化する。
+- ~~通信：HTTP → ACMを利用してHTTPS化する。~~
+　→対応済み：HTTP→ACMを利用してHTTPS化を実施。
 - 構築方法：手動 → TerraformでIaC化し、再現性を高める。
